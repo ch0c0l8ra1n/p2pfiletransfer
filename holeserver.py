@@ -9,7 +9,7 @@ class Server:
     self.PORT = port
 
     # This is a table that will contain 
-    # (ip,port,timeofconnection) tuples of connections
+    # (ip,port,nickname,timeofconnection) tuples of connections
     self.userList = []
     
     # create socket and bind it to a port
@@ -27,35 +27,41 @@ class Server:
       msgE , _ , _ , ipport  = self.sock.recvmsg(1024)
       ip , port = ipport
       msg = msgE.decode()
-      if msg == "JOIN":
-        self.addUser(ip,port)
+      if re.match("JOIN .*",msg):
+        nickName= msg[6:16]
+        self.addUser(ip,port,nickName)
       elif re.match(r"QUERY .*s",msg):
         qIP = msg[6:]
         self.query(qIP,ip,port)
   
-  def addUser(self,ip,port):
+  def addUser(self,ip,port,nick):
+    # Test if username Exists
+    if reduce (lambda x y : x && y , list ( filter (lambda x: x==nick , self.userList) ) ):
+      self.sendMsg("NICKNAME_EXISTS {}".format(nick),ip,port)
+
     currTime = time.time()  
-    for i , uIP , _ , _ in enumerate(self.userList):
+    for i , uIP , _ , nN , _ in enumerate(self.userList):
       if uIP == ip:
         self.userList[i][1] = port
+        self.userList[i][2] = nick
         self.query(ip,ip,port)
         return True
-    pair = (ip,port,time.time())
+    pair = (ip,port,nick,time.time())
     self.userList.append(pair)
     self.query(ip,ip,port)
     return True
 
   def query(self, qIP, ip, port):
-    
-    for i , uIP , uPort , _ in enumerate(self.userList):
+    for i , uIP , uPort , nN , _ in enumerate(self.userList):
       if uIP == qIP :
-        self.sendMsg ( "FOUND {} : {}".format(uIP , uPort) , ip , port )
+        self.sendMsg ( "FOUND {} @ {} : {}".format(nN , uIP , uPort) , ip , port )
         return True
     self.sendMsg ( "!FOUND {}".format(qIP) , ip , port )
     return False
 
   def sendMsg (self ,  msg , ip ,port ):
     self.sock.sendto( msg.encode() , (ip,port) )
+    return True
         
     
     
