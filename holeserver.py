@@ -36,7 +36,7 @@ class Server:
   
   def addUser(self,ip,port,nick):
     # Test if username Exists
-    if reduce (lambda x y : x && y , list ( filter (lambda x: x==nick , self.userList) ) ):
+    if reduce (lambda x,y : x and y , list ( filter (lambda x: x==nick , self.userList) ) ):
       self.sendMsg("NICKNAME_EXISTS {}".format(nick),ip,port)
 
     currTime = time.time()  
