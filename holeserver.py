@@ -42,6 +42,7 @@ class Server:
         return True
     pair = (ip,port,time.time())
     self.userList.append(pair)
+    self.query(ip,ip,port)
     return True
 
   def query(self, qIP, ip, port):
