@@ -21,6 +21,8 @@ class Server:
       print ( "Unable to bind to {} , bound to {} instead".format(self.PORT , self.realPort) )
     else:
       print ("Bound to {}".format(self.PORT)) 
+
+
   def serve(self):
     while True:
       print(self.userList)
@@ -28,21 +30,24 @@ class Server:
       ip , port = ipport
       msg = msgE.decode()
       if re.match("JOIN .*",msg):
-        nickName= msg[6:16]
+        nickName= msg[5:15]
         self.addUser(ip,port,nickName)
-      elif re.match(r"QUERY .*s",msg):
+      elif re.match(r"QUERY .*",msg):
         qIP = msg[6:]
         self.query(qIP,ip,port)
+      elif re.match(r"QUERYNICK .*",msg):
+        nick = msg[10:]
+        self.queryNick(nick,ip,port)
   
   def addUser(self,ip,port,nick):
     # Test if username Exists
-    if reduce (lambda x,y : x and y , list ( filter (lambda x: x==nick , self.userList) ) ):
+    if any( list ( filter (lambda x: x==nick , self.userList) ) ):
       self.sendMsg("NICKNAME_EXISTS {}".format(nick),ip,port)
 
     currTime = time.time()  
-    for i , uIP , _ , nN , _ in enumerate(self.userList):
-      if uIP == ip:
-        self.userList[i][1] = port
+    for i , temp in enumerate(self.userList):
+      uIP , pP , nN , _ = temp
+      if uIP == ip and port != pP:
         self.userList[i][2] = nick
         self.query(ip,ip,port)
         return True
@@ -52,12 +57,22 @@ class Server:
     return True
 
   def query(self, qIP, ip, port):
-    for i , uIP , uPort , nN , _ in enumerate(self.userList):
+    for i , temp in enumerate(self.userList):
+      uIP , uPort , nN , _ = temp
       if uIP == qIP :
         self.sendMsg ( "FOUND {} @ {} : {}".format(nN , uIP , uPort) , ip , port )
         return True
     self.sendMsg ( "!FOUND {}".format(qIP) , ip , port )
     return False
+
+  def queryNick (self, qN , ip , port):
+    for i , temp in enumerate(self.userList):
+      uIP , uPort , nN , _ = temp
+      if nN == qN :
+        self.sendMsg( "FOUNDNICK {} @ {} : {}".format(nN, uIP, uPort) , ip ,port)
+        return True
+      self.sendMsg ( "!FOUNDNICK {}".format(nN) , ip , port )
+
 
   def sendMsg (self ,  msg , ip ,port ):
     self.sock.sendto( msg.encode() , (ip,port) )
