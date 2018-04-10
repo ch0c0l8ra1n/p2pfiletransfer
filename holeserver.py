@@ -38,6 +38,8 @@ class Server:
       elif re.match(r"QUERYNICK .*",msg):
         nick = msg[10:]
         self.queryNick(nick,ip,port)
+      if re.match(r"KEEPALIVE .*",msg)
+        self.keepalive(ip,port,nick)
   
   def addUser(self,ip,port,nick):
     # Test if username Exists
@@ -72,6 +74,12 @@ class Server:
         self.sendMsg( "FOUNDNICK {} @ {} : {}".format(nN, uIP, uPort) , ip ,port)
         return True
     self.sendMsg ( "!FOUNDNICK {}".format(qN) , ip , port )
+
+  def keepAlive(self, ip ,port , nick):
+    for i , temp in enumerate(self.userList):
+      uIP , uPort , nN , _ = temp
+      if uIP == ip and nN == nick:
+        self.userList[i][3] = time.time()
 
 
   def sendMsg (self ,  msg , ip ,port ):
