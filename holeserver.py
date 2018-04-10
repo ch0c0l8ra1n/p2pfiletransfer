@@ -9,7 +9,7 @@ class Server:
     self.PORT = port
 
     # This is a table that will contain 
-    # (ip,port,nickname,timeofconnection) tuples of connections
+    # [ip,port,nickname,timeofconnection] list of connections
     self.userList = []
     
     # create socket and bind it to a port
@@ -51,7 +51,7 @@ class Server:
         self.userList[i][2] = nick
         self.query(ip,ip,port)
         return True
-    pair = (ip,port,nick,time.time())
+    pair = [ip,port,nick,time.time()]
     self.userList.append(pair)
     self.query(ip,ip,port)
     return True
@@ -71,7 +71,7 @@ class Server:
       if nN == qN :
         self.sendMsg( "FOUNDNICK {} @ {} : {}".format(nN, uIP, uPort) , ip ,port)
         return True
-      self.sendMsg ( "!FOUNDNICK {}".format(nN) , ip , port )
+    self.sendMsg ( "!FOUNDNICK {}".format(qN) , ip , port )
 
 
   def sendMsg (self ,  msg , ip ,port ):
